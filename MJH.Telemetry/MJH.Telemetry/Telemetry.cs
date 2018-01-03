@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MJH.Telemetry
+﻿namespace MJH.Telemetry
 {
     public class Telemetry<T> : BaseTelemetry
     {

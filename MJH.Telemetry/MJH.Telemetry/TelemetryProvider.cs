@@ -48,11 +48,11 @@ namespace MJH.Telemetry
             throw new NotImplementedException();
         }
 
-        private static String getRAMsize()
+        private static string getRAMsize()
         {
-            ManagementClass mc = new ManagementClass("Win32_ComputerSystem");
-            ManagementObjectCollection moc = mc.GetInstances();
-            foreach (ManagementObject item in moc)
+            var mc = new ManagementClass("Win32_ComputerSystem");
+            var moc = mc.GetInstances();
+            foreach (var item in moc)
             {
                 return Convert.ToString(Math.Round(Convert.ToDouble(item.Properties["TotalPhysicalMemory"].Value) / 1048576, 2));
             }

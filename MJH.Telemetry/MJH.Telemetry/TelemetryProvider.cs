@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Management;
 
 namespace MJH.Telemetry
 {
-    public class TelemetryProvider : ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, double, Telemetry<HardDisk>>
+    public class TelemetryProvider : ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>
     {
         public Telemetry<double> Cpu()
         {
@@ -19,11 +20,11 @@ namespace MJH.Telemetry
             };
         }
 
-        Telemetry<Memory> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, double, Telemetry<HardDisk>>.Memory()
+        Telemetry<Memory> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>.Memory()
         {
             var ramr = new PerformanceCounter("Memory", "Available MBytes");
 
-            var totalMemory = getRAMsize();
+            var totalMemory = GetRamSize();
 
             return new Telemetry<Memory>
             {
@@ -38,17 +39,35 @@ namespace MJH.Telemetry
             };
         }
 
-        double ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, double, Telemetry<HardDisk>>.Network()
+        List<Telemetry<double>> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>.Network()
+        {
+            var networkCards = GetNetworkCards();
+
+            var telemetryData = new List<Telemetry<double>>();
+
+            foreach (var networkInterface in networkCards)
+            {
+                var utilization = GetNetworkUtilization(networkInterface);
+
+                var telemetry = new Telemetry<double>()
+                {
+                    Data = Convert.ToDouble(utilization),
+                    DateTime = DateTime.Now,
+                    Message = "Successfully checked utilization."
+                };
+
+                telemetryData.Add(telemetry);
+            }
+
+            return telemetryData;
+        }
+
+        Telemetry<HardDisk> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>.HardDiskSpace()
         {
             throw new NotImplementedException();
         }
 
-        Telemetry<HardDisk> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, double, Telemetry<HardDisk>>.HardDiskSpace()
-        {
-            throw new NotImplementedException();
-        }
-
-        private static string getRAMsize()
+        private static string GetRamSize()
         {
             var mc = new ManagementClass("Win32_ComputerSystem");
             var moc = mc.GetInstances();
@@ -58,6 +77,46 @@ namespace MJH.Telemetry
             }
 
             return "RAMsize";
+        }
+
+        public static double GetNetworkUtilization(string networkCard)
+        {
+            const int numberOfIterations = 10;
+
+            var bandwidthCounter = new PerformanceCounter("Network Interface", "Current Bandwidth", networkCard);
+
+            var bandwidth = bandwidthCounter.NextValue();
+
+            var dataSentCounter = new PerformanceCounter("Network Interface", "Bytes Sent/sec", networkCard);
+
+            var dataReceivedCounter = new PerformanceCounter("Network Interface", "Bytes Received/sec", networkCard);
+
+            float sendSum = 0;
+
+            float receiveSum = 0;
+
+            for (var index = 0; index < numberOfIterations; index++)
+            {
+                sendSum += dataSentCounter.NextValue();
+
+                receiveSum += dataReceivedCounter.NextValue();
+            }
+
+            var dataSent = sendSum;
+
+            var dataReceived = receiveSum;
+
+            var utilization = (8 * (dataSent + dataReceived)) / (bandwidth * numberOfIterations) * 100;
+
+            return utilization;
+        }
+
+        public string[] GetNetworkCards()
+        {
+            var category = new PerformanceCounterCategory("Network Interface");
+            var instancenames = category.GetInstanceNames();
+
+            return instancenames;
         }
     }
 }

@@ -1,12 +1,14 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MJH.Telemetry.Tests
 {
     [TestFixture]
     public class TelemetryTestFixture
     {
-        private ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, double, Telemetry<HardDisk>> _telemetry;
+        private ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>> _telemetry;
 
 
 
@@ -44,7 +46,10 @@ namespace MJH.Telemetry.Tests
         [Test]
         public void GetNetworkUtilization()
         {
+            var result = _telemetry.Network();
 
+            Assert.NotNull(result.First());
+            Assert.GreaterOrEqual(result.First().DateTime, DateTime.Now);
         }
 
         [Test]

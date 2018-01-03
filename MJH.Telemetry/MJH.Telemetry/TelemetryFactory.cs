@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MJH.Telemetry
 {
     public class TelemetryFactory
     {
-        public ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, double, Telemetry<HardDisk>> GetProvider(InterfaceVersion version)
+        public ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>> GetProvider(InterfaceVersion version)
         {
             switch (version)
             {

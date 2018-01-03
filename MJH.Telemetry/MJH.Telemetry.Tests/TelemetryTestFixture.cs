@@ -8,7 +8,7 @@ namespace MJH.Telemetry.Tests
     [TestFixture]
     public class TelemetryTestFixture
     {
-        private ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>> _telemetry;
+        private ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, List<Telemetry<HardDisk>>> _telemetry;
 
 
 
@@ -55,7 +55,10 @@ namespace MJH.Telemetry.Tests
         [Test]
         public void GetHardDiskUtilization()
         {
+            var result = _telemetry.HardDiskSpace();
 
+            Assert.Greater(result.Count, 0);
+            Assert.IsNotNull(result);
         }
     }
 }

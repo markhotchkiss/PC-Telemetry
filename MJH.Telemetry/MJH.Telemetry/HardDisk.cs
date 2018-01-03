@@ -2,9 +2,9 @@
 {
     public class HardDisk
     {
-        public double FreeSpace => TotalSpace - UsedSpace;
+        public double FreeSpace { get; set; }
 
-        public double UsedSpace { get; set; }
+        public double UsedSpace => TotalSpace - FreeSpace;
 
         public double TotalSpace { get; set; }
 

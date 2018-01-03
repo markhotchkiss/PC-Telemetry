@@ -5,7 +5,7 @@ namespace MJH.Telemetry
 {
     public class TelemetryFactory
     {
-        public ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>> GetProvider(InterfaceVersion version)
+        public ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, List<Telemetry<HardDisk>>> GetProvider(InterfaceVersion version)
         {
             switch (version)
             {

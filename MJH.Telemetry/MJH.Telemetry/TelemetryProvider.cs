@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Management;
 
 namespace MJH.Telemetry
 {
-    public class TelemetryProvider : ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>
+    public class TelemetryProvider : ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, List<Telemetry<HardDisk>>>
     {
         public Telemetry<double> Cpu()
         {
@@ -20,7 +21,7 @@ namespace MJH.Telemetry
             };
         }
 
-        Telemetry<Memory> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>.Memory()
+        Telemetry<Memory> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, List<Telemetry<HardDisk>>>.Memory()
         {
             var ramr = new PerformanceCounter("Memory", "Available MBytes");
 
@@ -39,7 +40,7 @@ namespace MJH.Telemetry
             };
         }
 
-        List<Telemetry<double>> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>.Network()
+        List<Telemetry<double>> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, List<Telemetry<HardDisk>>>.Network()
         {
             var networkCards = GetNetworkCards();
 
@@ -62,9 +63,31 @@ namespace MJH.Telemetry
             return telemetryData;
         }
 
-        Telemetry<HardDisk> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, Telemetry<HardDisk>>.HardDiskSpace()
+        List<Telemetry<HardDisk>> ITelemetryProvider<Telemetry<double>, Telemetry<Memory>, List<Telemetry<double>>, List<Telemetry<HardDisk>>>.HardDiskSpace()
         {
-            throw new NotImplementedException();
+            var drives = DriveInfo.GetDrives();
+
+            var driveList = new List<Telemetry<HardDisk>>();
+
+            foreach (var drive in drives)
+            {
+                var availableSpace = GetTotalFreeSpace(drive.Name);
+                var totalSize = GetTotalSize(drive.Name);
+
+                var d = new Telemetry<HardDisk>
+                {
+                    Data = new HardDisk()
+                    {
+                        TotalSpace = totalSize,
+                        FreeSpace = availableSpace,
+                        DriveLetter = drive.Name
+
+                    }
+                };
+                driveList.Add(d);
+            }
+
+            return driveList;
         }
 
         private static string GetRamSize()
@@ -117,6 +140,30 @@ namespace MJH.Telemetry
             var instancenames = category.GetInstanceNames();
 
             return instancenames;
+        }
+
+        private double GetTotalFreeSpace(string driveName)
+        {
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                if (drive.IsReady && drive.Name == driveName)
+                {
+                    return Math.Round(Convert.ToDouble(drive.AvailableFreeSpace / 1073741824.0), 2);
+                }
+            }
+            return 0.0;
+        }
+
+        private double GetTotalSize(string driveName)
+        {
+            foreach (DriveInfo drive in DriveInfo.GetDrives())
+            {
+                if (drive.IsReady && drive.Name == driveName)
+                {
+                    return Math.Round(Convert.ToDouble(drive.TotalSize / 1073741824.0), 2);
+                }
+            }
+            return 0.0;
         }
     }
 }
